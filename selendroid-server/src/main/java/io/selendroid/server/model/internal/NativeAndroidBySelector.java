@@ -28,6 +28,7 @@ public class NativeAndroidBySelector {
   public static final String SELECTOR_NAME = "name";
   public static final String SELECTOR_CLASS = "class name";
   public static final String SELECTOR_CSS = "css selector";
+  public static final String SELECTOR_TAG = "view tag";
 
   public By pickFrom(String method, String selector) {
     if (SELECTOR_NATIVE_ID.equals(method)) {
@@ -44,13 +45,16 @@ public class NativeAndroidBySelector {
       return By.xpath(selector);
     } else if (SELECTOR_CLASS.equals(method)) {
       return By.className(selector);
-    }else if(SELECTOR_CSS.equals(method)){
+    } else if (SELECTOR_CSS.equals(method)){
       return By.cssSelector(selector);
+    } else if (SELECTOR_TAG.equals(method)) {
+      return By.viewTag(selector);
     }
 
     else {
-      SelendroidLogger.info("By type for methof not found: " + method);
-      throw new SelendroidException("method (by) not found: " + method);
+      String errorMessage = "By type for method not found: " + method;
+      SelendroidLogger.warning(errorMessage);
+      throw new SelendroidException(errorMessage);
     }
   }
 }

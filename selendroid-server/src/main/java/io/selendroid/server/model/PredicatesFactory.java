@@ -13,9 +13,10 @@
  */
 package io.selendroid.server.model;
 
-
+import android.app.Activity;
 import android.view.View;
 import com.android.internal.util.Predicate;
+import io.selendroid.server.ServerInstrumentation;
 
 public class PredicatesFactory {
 
@@ -41,5 +42,21 @@ public class PredicatesFactory {
 
   public Predicate<View> createClassPredicate(String using) {
     return new ClassPredicate(using);
+  }
+
+  public Predicate createViewTagPredicate(String using) {
+    String[] tagKeyValue = using.split(":");
+    if (tagKeyValue.length != 2) {
+      throw new IllegalArgumentException("Tag selector must be in the form key:value. Was: " + using);
+    }
+    String tagKeyName = tagKeyValue[0];
+    String tagValue = tagKeyValue[1];
+
+    Activity activity = ServerInstrumentation.getInstance().getCurrentActivity();
+    int tagKey = activity.getResources().getIdentifier(tagKeyName, "id", activity.getPackageName());
+    if (tagKey == 0) {
+      throw new IllegalArgumentException("No resource can be found for: " + tagKeyName);
+    }
+    return new ViewTagPredicate(tagKey, tagValue);
   }
 }

@@ -23,7 +23,6 @@ import io.selendroid.server.common.exceptions.SelendroidException;
 import io.selendroid.server.common.exceptions.UnsupportedOperationException;
 import io.selendroid.server.model.*;
 import io.selendroid.server.model.By.*;
-import io.selendroid.server.util.ListUtil;
 import io.selendroid.server.util.Preconditions;
 import io.selendroid.server.util.SelendroidLogger;
 import org.json.JSONArray;
@@ -42,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-
 public abstract class AbstractNativeElementContext
     implements
       SearchContext,
@@ -52,7 +50,8 @@ public abstract class AbstractNativeElementContext
       FindsByText,
       FindsByXPath,
       FindsByPartialText,
-      FindsByClass {
+      FindsByClass,
+      FindsByViewTag {
   protected ServerInstrumentation instrumentation;
   protected KeySender keys;
   protected KnownElements knownElements;
@@ -64,6 +63,10 @@ public abstract class AbstractNativeElementContext
     this.knownElements = Preconditions.checkNotNull(knownElements);
     this.viewAnalyzer = ViewHierarchyAnalyzer.getDefaultInstance();
   }
+
+  protected abstract View getRootView();
+
+  protected abstract List<View> getTopLevelViews();
 
   AndroidNativeElement newAndroidElement(View view) {
     Preconditions.checkNotNull(view);
@@ -168,10 +171,12 @@ public abstract class AbstractNativeElementContext
       return findElementsByName(by.getElementLocator());
     } else if (by instanceof ByXPath) {
       return findElementsByXPath(by.getElementLocator());
+    } else if (by instanceof ByViewTag) {
+      return findElementsByViewTag(by.getElementLocator());
     }
 
     throw new UnsupportedOperationException(String.format(
-        "By locator %s is curently not supported!", by.getClass().getSimpleName()));
+        "By locator %s is not supported", by.getClass().getSimpleName()));
   }
 
   @Override
@@ -190,9 +195,11 @@ public abstract class AbstractNativeElementContext
       return findElementByName(by.getElementLocator());
     } else if (by instanceof ByXPath) {
       return findElementByXPath(by.getElementLocator());
+    } else if (by instanceof ByViewTag) {
+      return findElementByViewTag(by.getElementLocator());
     }
     throw new UnsupportedOperationException(String.format(
-        "By locator %s is curently not supported!", by.getClass().getSimpleName()));
+        "By locator %s is not supported", by.getClass().getSimpleName()));
   }
 
 
@@ -343,19 +350,13 @@ public abstract class AbstractNativeElementContext
     return findAllByPredicate(Factories.getPredicatesFactory().createClassPredicate(using));
   }
 
-  // TODO: Remove unused method
-  private List<AndroidElement> filterAndTransformElements(Collection<View> currentViews,
-      Predicate predicate) {
-    Collection<?> filteredViews = ListUtil.filter(currentViews, predicate);
-    final List<AndroidElement> filtered = new ArrayList<AndroidElement>();
-    for (Object v : filteredViews) {
-      filtered.add(newAndroidElement((View) v));
-    }
-
-    return filtered;
+  @Override
+  public AndroidElement findElementByViewTag(String using) {
+    return findFirstByPredicate(Factories.getPredicatesFactory().createViewTagPredicate(using));
   }
 
-  protected abstract View getRootView();
-
-  protected abstract List<View> getTopLevelViews();
+  @Override
+  public List<AndroidElement> findElementsByViewTag(String using) {
+    return findAllByPredicate(Factories.getPredicatesFactory().createViewTagPredicate(using));
+  }
 }

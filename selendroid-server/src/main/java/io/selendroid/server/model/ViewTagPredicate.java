@@ -13,22 +13,26 @@
  */
 package io.selendroid.server.model;
 
-public class Factories {
+import android.view.View;
+import com.android.internal.util.Predicate;
+import io.selendroid.server.util.Preconditions;
 
-  private static AndroidNativeElementFactory androidNativeElementFactory = null;
-  private static PredicatesFactory predicatesFactory = null;
+/**
+ * Finds views with a given tag.
+ * See <a href="http://developer.android.com/reference/android/view/View.html#getTag(int)">View.getTag(key)</a>.
+ */
+public class ViewTagPredicate implements Predicate<View> {
 
-  public static AndroidNativeElementFactory getAndroidNativeElementFactory() {
-    if (androidNativeElementFactory == null) {
-      androidNativeElementFactory = new DefaultAndroidNativeElementFactory();
-    }
-    return androidNativeElementFactory;
+  private final int key;
+  private final String value;
+
+  public ViewTagPredicate(int key, String value) {
+    this.key = key;
+    this.value = Preconditions.checkNotNull(value, "Tag value cannot be null.");
   }
 
-  public static PredicatesFactory getPredicatesFactory() {
-    if (predicatesFactory == null) {
-      predicatesFactory = new PredicatesFactory();
-    }
-    return predicatesFactory;
+  @Override
+  public boolean apply(View view) {
+    return this.value.equals(view.getTag(this.key));
   }
 }

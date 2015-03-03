@@ -16,6 +16,7 @@ package io.selendroid.server.model;
 import java.util.List;
 
 import io.selendroid.server.model.internal.FindsByTagName;
+import io.selendroid.server.util.Preconditions;
 
 /**
  * Mechanism used to locate elements within a document. In order to create your own locating
@@ -242,9 +243,27 @@ public abstract class By {
     }
   }
 
-  public static By cssSelector(String css) {
-    if (css == null) throw new IllegalArgumentException("Cannot find elements when css is null.");
-    return new ByCssSelector(css);
+  public static class ByViewTag extends By {
+    private final String tagKeyAndValue;
+
+    public ByViewTag(String tagKeyAndValue) {
+      this.tagKeyAndValue = Preconditions.checkNotNull(tagKeyAndValue);
+    }
+
+    @Override
+    public AndroidElement findElement(SearchContext context) {
+      return context.findElement(this);
+    }
+
+    @Override
+    public List<AndroidElement> findElements(SearchContext context) {
+      return context.findElements(this);
+    }
+
+    @Override
+    public String getElementLocator() {
+      return tagKeyAndValue;
+    }
   }
 
   /**
@@ -295,6 +314,18 @@ public abstract class By {
     if (className == null)
       throw new IllegalArgumentException("Cannot find elements when className is null.");
     return new ByClass(className);
+  }
+
+  public static By cssSelector(String css) {
+    if (css == null) throw new IllegalArgumentException("Cannot find elements when css is null.");
+    return new ByCssSelector(css);
+  }
+
+  public static By viewTag(String tagKeyAndValue) {
+    if (tagKeyAndValue == null || tagKeyAndValue.isEmpty()) {
+      throw new IllegalArgumentException("Cannot find elements tag selector is null.");
+    }
+    return new ByViewTag(tagKeyAndValue);
   }
 
   @Override
